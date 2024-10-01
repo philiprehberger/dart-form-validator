@@ -1,3 +1,4 @@
+import 'async_field_validator.dart';
 import 'field_validator.dart';
 import 'rules.dart';
 import 'validation_result.dart';
@@ -31,6 +32,9 @@ class FormSchema {
         if (validator is CrossFieldValidator) {
           final error = validator.validateWithData(value, data);
           if (error != null) fieldErrors.add(error);
+        } else if (validator is ConditionalValidator) {
+          final error = validator.validateWithCondition(value, data);
+          if (error != null) fieldErrors.add(error);
         } else {
           final error = validator.validate(value);
           if (error != null) fieldErrors.add(error);
@@ -38,6 +42,32 @@ class FormSchema {
       }
 
       if (fieldErrors.isNotEmpty) errors[fieldName] = fieldErrors;
+    }
+
+    return ValidationResult(errors);
+  }
+
+  /// Validate with support for async validators.
+  ///
+  /// Handles both sync [FieldValidator] and [AsyncFieldValidator] rules.
+  Future<ValidationResult> validateAsync(
+    Map<String, dynamic> data, {
+    List<MapEntry<String, AsyncFieldValidator>>? asyncValidators,
+  }) async {
+    // First run sync validation
+    final syncResult = validate(data);
+    final errors = Map<String, List<String>>.from(
+      syncResult.errors.map((k, v) => MapEntry(k, List<String>.from(v))),
+    );
+
+    // Then run async validators
+    if (asyncValidators != null) {
+      for (final entry in asyncValidators) {
+        final error = await entry.value.validate(data[entry.key]);
+        if (error != null) {
+          errors.putIfAbsent(entry.key, () => []).add(error);
+        }
+      }
     }
 
     return ValidationResult(errors);
