@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-02
+
+### Added
+- `MessageProvider` for localizable error messages
+- `DefaultMessageProvider` with English defaults
+- `Rules.inRange()` for inclusive range validation
+- `FormSchema.nested()` for validating nested objects
+- `FormSchema.validateNested()` returns dot-path error keys
+- `ValidationResult.nested()` extracts errors for a nested prefix
+
 ## [0.2.0] - 2026-04-01
 
 ### Added

@@ -1,4 +1,5 @@
 import 'field_validator.dart';
+import 'message_provider.dart';
 
 /// Built-in composable validation rules.
 ///
@@ -21,7 +22,8 @@ class Rules {
   /// Requires the value to be non-null and non-empty (for strings).
   static FieldValidator required({String? message}) {
     return FieldValidator(
-      message ?? 'This field is required',
+      message ??
+          MessageProvider.current.message('required', {}),
       (value) {
         if (value == null) return false;
         if (value is String) return value.trim().isNotEmpty;
@@ -33,7 +35,8 @@ class Rules {
   /// Validates that the value is a valid email address.
   static FieldValidator email({String? message}) {
     return FieldValidator(
-      message ?? 'Invalid email address',
+      message ??
+          MessageProvider.current.message('email', {}),
       (value) {
         if (value == null || value is! String || value.isEmpty) return true;
         return _emailRegex.hasMatch(value);
@@ -44,7 +47,8 @@ class Rules {
   /// Validates that the value is a valid URL with http or https scheme.
   static FieldValidator url({String? message}) {
     return FieldValidator(
-      message ?? 'Invalid URL',
+      message ??
+          MessageProvider.current.message('url', {}),
       (value) {
         if (value == null || value is! String || value.isEmpty) return true;
         return _urlRegex.hasMatch(value);
@@ -55,7 +59,8 @@ class Rules {
   /// Validates that a string value has at least [min] characters.
   static FieldValidator minLength(int min, {String? message}) {
     return FieldValidator(
-      message ?? 'Must be at least $min characters',
+      message ??
+          MessageProvider.current.message('minLength', {'min': min}),
       (value) {
         if (value == null || value is! String || value.isEmpty) return true;
         return value.length >= min;
@@ -66,7 +71,8 @@ class Rules {
   /// Validates that a string value has at most [max] characters.
   static FieldValidator maxLength(int max, {String? message}) {
     return FieldValidator(
-      message ?? 'Must be at most $max characters',
+      message ??
+          MessageProvider.current.message('maxLength', {'max': max}),
       (value) {
         if (value == null || value is! String || value.isEmpty) return true;
         return value.length <= max;
@@ -77,7 +83,8 @@ class Rules {
   /// Validates that a string value matches the given [regex] pattern.
   static FieldValidator pattern(RegExp regex, {String? message}) {
     return FieldValidator(
-      message ?? 'Invalid format',
+      message ??
+          MessageProvider.current.message('pattern', {}),
       (value) {
         if (value == null || value is! String || value.isEmpty) return true;
         return regex.hasMatch(value);
@@ -88,7 +95,8 @@ class Rules {
   /// Validates that the value is numeric (integer or decimal).
   static FieldValidator numeric({String? message}) {
     return FieldValidator(
-      message ?? 'Must be a number',
+      message ??
+          MessageProvider.current.message('numeric', {}),
       (value) {
         if (value == null) return true;
         if (value is num) return true;
@@ -102,7 +110,9 @@ class Rules {
   /// Validates that a numeric value is between [min] and [max] (inclusive).
   static FieldValidator between(num min, num max, {String? message}) {
     return FieldValidator(
-      message ?? 'Must be between $min and $max',
+      message ??
+          MessageProvider.current
+              .message('between', {'min': min, 'max': max}),
       (value) {
         if (value == null) return true;
         final n = value is num ? value : num.tryParse(value.toString());
@@ -122,7 +132,9 @@ class Rules {
   /// Typically used for password confirmation fields.
   static FieldValidator equals(String otherField, {String? message}) {
     return CrossFieldValidator(
-      message ?? 'Must match $otherField',
+      message ??
+          MessageProvider.current
+              .message('equals', {'otherField': otherField}),
       otherField,
     );
   }
@@ -130,10 +142,27 @@ class Rules {
   /// Validates that the value is one of the [allowed] values.
   static FieldValidator oneOf(List<dynamic> allowed, {String? message}) {
     return FieldValidator(
-      message ?? 'Must be one of: ${allowed.join(', ')}',
+      message ??
+          MessageProvider.current
+              .message('oneOf', {'allowed': allowed}),
       (value) {
         if (value == null) return true;
         return allowed.contains(value);
+      },
+    );
+  }
+
+  /// Validates that a numeric value is within the inclusive range [min]..[max].
+  static FieldValidator inRange(num min, num max, {String? message}) {
+    return FieldValidator(
+      message ??
+          MessageProvider.current
+              .message('inRange', {'min': min, 'max': max}),
+      (value) {
+        if (value == null) return true;
+        final n = value is num ? value : num.tryParse(value.toString());
+        if (n == null) return false;
+        return n >= min && n <= max;
       },
     );
   }

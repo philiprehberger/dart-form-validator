@@ -10,9 +10,19 @@ import 'validation_result.dart';
 /// so a single field may produce multiple error messages.
 class FormSchema {
   final Map<String, List<FieldValidator>> _fields;
+  final Map<String, FormSchema> _nestedSchemas;
 
   /// Creates a schema from a map of field names to validator lists.
-  FormSchema(this._fields);
+  FormSchema(this._fields) : _nestedSchemas = const {};
+
+  /// Creates a schema that also validates nested objects.
+  ///
+  /// [nestedSchemas] maps a field name to a [FormSchema] that will be used
+  /// to validate the nested map stored under that key.
+  FormSchema.nested(
+    this._fields, {
+    Map<String, FormSchema>? nestedSchemas,
+  }) : _nestedSchemas = nestedSchemas ?? const {};
 
   /// Validates a map of form [data] against the schema.
   ///
@@ -42,6 +52,45 @@ class FormSchema {
       }
 
       if (fieldErrors.isNotEmpty) errors[fieldName] = fieldErrors;
+    }
+
+    return ValidationResult(errors);
+  }
+
+  /// Validates form [data] including nested objects.
+  ///
+  /// Top-level fields are validated normally. Each key in [_nestedSchemas]
+  /// is looked up in [data] — if the value is a [Map], it is validated
+  /// recursively and errors are returned with dot-path keys
+  /// (e.g., `address.city`). If the value is `null` or not a [Map], a
+  /// single error is added for the nested key.
+  ValidationResult validateNested(Map<String, dynamic> data) {
+    final errors = <String, List<String>>{};
+
+    // Run top-level validation
+    final topResult = validate(data);
+    errors.addAll(topResult.errors.map(
+      (k, v) => MapEntry(k, List<String>.from(v)),
+    ));
+
+    // Run nested validation
+    for (final entry in _nestedSchemas.entries) {
+      final key = entry.key;
+      final nestedSchema = entry.value;
+      final nestedData = data[key];
+
+      if (nestedData == null || nestedData is! Map<String, dynamic>) {
+        errors[key] = ['Must be a valid object'];
+        continue;
+      }
+
+      final nestedResult = nestedSchema._nestedSchemas.isEmpty
+          ? nestedSchema.validate(nestedData)
+          : nestedSchema.validateNested(nestedData);
+
+      for (final nestedEntry in nestedResult.errors.entries) {
+        errors['$key.${nestedEntry.key}'] = nestedEntry.value;
+      }
     }
 
     return ValidationResult(errors);

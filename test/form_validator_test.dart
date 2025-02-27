@@ -521,4 +521,202 @@ void main() {
       expect(rule.validate('bad'), equals('Enter valid email'));
     });
   });
+
+  group('DefaultMessageProvider', () {
+    test('returns messages for all rule keys', () {
+      final provider = DefaultMessageProvider();
+      expect(provider.message('required', {}), isNotEmpty);
+      expect(provider.message('email', {}), isNotEmpty);
+      expect(provider.message('url', {}), isNotEmpty);
+      expect(
+        provider.message('minLength', {'min': 3}),
+        contains('3'),
+      );
+      expect(
+        provider.message('maxLength', {'max': 10}),
+        contains('10'),
+      );
+      expect(provider.message('pattern', {}), isNotEmpty);
+      expect(provider.message('numeric', {}), isNotEmpty);
+      expect(
+        provider.message('between', {'min': 1, 'max': 10}),
+        contains('1'),
+      );
+      expect(
+        provider.message('equals', {'otherField': 'password'}),
+        contains('password'),
+      );
+      expect(
+        provider.message('oneOf', {
+          'allowed': ['a', 'b'],
+        }),
+        contains('a'),
+      );
+      expect(
+        provider.message('inRange', {'min': 0, 'max': 100}),
+        contains('100'),
+      );
+    });
+  });
+
+  group('Custom MessageProvider', () {
+    tearDown(() {
+      MessageProvider.resetProvider();
+    });
+
+    test('changes rule messages globally', () {
+      final custom = _SpanishMessageProvider();
+      MessageProvider.setProvider(custom);
+
+      final rule = Rules.required();
+      expect(rule.validate(null), equals('Campo obligatorio'));
+    });
+
+    test('resetProvider restores defaults', () {
+      MessageProvider.setProvider(_SpanishMessageProvider());
+      MessageProvider.resetProvider();
+
+      final rule = Rules.required();
+      expect(rule.validate(null), equals('This field is required'));
+    });
+  });
+
+  group('Rules.inRange', () {
+    final rule = Rules.inRange(1, 10);
+
+    test('passes for value in range', () {
+      expect(rule.validate(5), isNull);
+    });
+
+    test('passes for min boundary', () {
+      expect(rule.validate(1), isNull);
+    });
+
+    test('passes for max boundary', () {
+      expect(rule.validate(10), isNull);
+    });
+
+    test('fails for value below range', () {
+      expect(rule.validate(0), isNotNull);
+    });
+
+    test('fails for value above range', () {
+      expect(rule.validate(11), isNotNull);
+    });
+
+    test('passes for null', () {
+      expect(rule.validate(null), isNull);
+    });
+
+    test('parses string values', () {
+      expect(rule.validate('5'), isNull);
+      expect(rule.validate('0'), isNotNull);
+    });
+
+    test('fails for non-numeric string', () {
+      expect(rule.validate('abc'), isNotNull);
+    });
+  });
+
+  group('FormSchema.nested', () {
+    test('validates nested objects with dot-path error keys', () {
+      final schema = FormSchema.nested(
+        {
+          'name': [Rules.required()],
+        },
+        nestedSchemas: {
+          'address': FormSchema({
+            'city': [Rules.required()],
+            'zip': [Rules.required(), Rules.pattern(RegExp(r'^\d{5}$'))],
+          }),
+        },
+      );
+
+      final result = schema.validateNested({
+        'name': 'Alice',
+        'address': {'city': '', 'zip': 'bad'},
+      });
+
+      expect(result.isValid, isFalse);
+      expect(result.hasError('address.city'), isTrue);
+      expect(result.hasError('address.zip'), isTrue);
+      expect(result.hasError('name'), isFalse);
+    });
+
+    test('reports error when nested object is missing', () {
+      final schema = FormSchema.nested(
+        {
+          'name': [Rules.required()],
+        },
+        nestedSchemas: {
+          'address': FormSchema({
+            'city': [Rules.required()],
+          }),
+        },
+      );
+
+      final result = schema.validateNested({
+        'name': 'Alice',
+      });
+
+      expect(result.hasError('address'), isTrue);
+    });
+
+    test('valid nested data passes', () {
+      final schema = FormSchema.nested(
+        {
+          'name': [Rules.required()],
+        },
+        nestedSchemas: {
+          'address': FormSchema({
+            'city': [Rules.required()],
+          }),
+        },
+      );
+
+      final result = schema.validateNested({
+        'name': 'Alice',
+        'address': {'city': 'Portland'},
+      });
+
+      expect(result.isValid, isTrue);
+    });
+  });
+
+  group('ValidationResult.nested', () {
+    test('extracts sub-results for a prefix', () {
+      const result = ValidationResult({
+        'name': ['Required'],
+        'address.city': ['Required'],
+        'address.zip': ['Invalid format'],
+      });
+
+      final addressResult = result.nested('address');
+      expect(addressResult.hasError('city'), isTrue);
+      expect(addressResult.hasError('zip'), isTrue);
+      expect(addressResult.hasError('name'), isFalse);
+      expect(addressResult.errorCount, equals(2));
+    });
+
+    test('returns empty result for unknown prefix', () {
+      const result = ValidationResult({
+        'name': ['Required'],
+      });
+
+      final sub = result.nested('address');
+      expect(sub.isValid, isTrue);
+    });
+  });
+}
+
+class _SpanishMessageProvider extends MessageProvider {
+  @override
+  String message(String ruleKey, Map<String, dynamic> params) {
+    switch (ruleKey) {
+      case 'required':
+        return 'Campo obligatorio';
+      default:
+        return 'Error de validacion';
+    }
+  }
 }

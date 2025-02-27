@@ -75,4 +75,29 @@ void main() {
   );
   print('\nCustom rule: ${noSpaces.validate('hello')}'); // null
   print('Custom rule: ${noSpaces.validate('hello world')}'); // error
+
+  // --- Nested object validation ---
+  final nestedSchema = FormSchema.nested(
+    {
+      'name': [Rules.required()],
+    },
+    nestedSchemas: {
+      'address': FormSchema({
+        'city': [Rules.required()],
+        'zip': [Rules.required(), Rules.pattern(RegExp(r'^\d{5}$'))],
+      }),
+    },
+  );
+
+  final nestedResult = nestedSchema.validateNested({
+    'name': 'Alice',
+    'address': {'city': '', 'zip': 'bad'},
+  });
+  print('\nNested valid: ${nestedResult.isValid}'); // false
+  print('address.city errors: ${nestedResult.errorsFor('address.city')}');
+  print('address.zip errors: ${nestedResult.errorsFor('address.zip')}');
+
+  // Extract nested sub-result
+  final addressErrors = nestedResult.nested('address');
+  print('Address error count: ${addressErrors.errorCount}');
 }
