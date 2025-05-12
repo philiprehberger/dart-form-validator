@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-02
+
+### Added
+- `Rules.date()` validator for date string validation
+- `Rules.dateAfter()` and `Rules.dateBefore()` for date range validation
+- `Rules.minItems()` and `Rules.maxItems()` for collection size validation
+- `FormSchema.fromJson()` now supports `date`, `dateAfter`, `dateBefore`, `minItems`, and `maxItems` descriptors
+
 ## [0.3.0] - 2026-04-02
 
 ### Added

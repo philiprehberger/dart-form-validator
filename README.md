@@ -16,7 +16,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  philiprehberger_form_validator: ^0.3.0
+  philiprehberger_form_validator: ^0.4.0
 ```
 
 Then run:
@@ -57,6 +57,11 @@ Rules.between(1, 100)
 Rules.equals('password')    // cross-field comparison
 Rules.oneOf(['a', 'b', 'c'])
 Rules.inRange(1, 100)
+Rules.date()
+Rules.dateAfter(DateTime(2026, 1, 1))
+Rules.dateBefore(DateTime(2026, 12, 31))
+Rules.minItems(1)
+Rules.maxItems(10)
 Rules.custom((v) => v != null, message: 'Required')
 ```
 
@@ -152,6 +157,24 @@ final addressErrors = result.nested('address');
 print(addressErrors.errorsFor('city')); // [This field is required]
 ```
 
+### Date Validation
+
+```dart
+final schema = FormSchema({
+  'birthday': [Rules.required(), Rules.date()],
+  'startDate': [Rules.dateAfter(DateTime(2026, 1, 1))],
+  'endDate': [Rules.dateBefore(DateTime(2026, 12, 31))],
+});
+```
+
+### Collection Validation
+
+```dart
+final schema = FormSchema({
+  'tags': [Rules.minItems(1), Rules.maxItems(10)],
+});
+```
+
 ### Localization
 
 ```dart
@@ -209,6 +232,11 @@ result.errorCount;           // total error count
 | `DefaultMessageProvider` | Built-in English message provider |
 | `FormSchema.nested()` | Schema with support for nested object validation |
 | `FormSchema.validateNested()` | Validates data including nested objects with dot-path keys |
+| `Rules.date()` | Validates date string format |
+| `Rules.dateAfter(min)` | Date must be on or after min |
+| `Rules.dateBefore(max)` | Date must be on or before max |
+| `Rules.minItems(min)` | Collection must have at least min items |
+| `Rules.maxItems(max)` | Collection must have at most max items |
 | `ValidationResult.nested()` | Extracts errors for a nested prefix |
 
 ## Development

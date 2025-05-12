@@ -709,6 +709,155 @@ void main() {
   });
 }
 
+  group('date validator', () {
+    test('accepts valid date strings', () {
+      final v = Rules.date();
+      expect(v.validate('2026-04-02'), isNull);
+      expect(v.validate('2026-04-02T12:30:00'), isNull);
+      expect(v.validate('2026-04-02T12:30:00.000Z'), isNull);
+    });
+
+    test('rejects invalid date strings', () {
+      final v = Rules.date();
+      expect(v.validate('not-a-date'), isNotNull);
+    });
+
+    test('accepts null and empty', () {
+      final v = Rules.date();
+      expect(v.validate(null), isNull);
+      expect(v.validate(''), isNull);
+    });
+  });
+
+  group('dateAfter validator', () {
+    test('accepts date on or after min', () {
+      final v = Rules.dateAfter(DateTime(2026, 1, 1));
+      expect(v.validate('2026-06-15'), isNull);
+      expect(v.validate('2026-01-01'), isNull);
+    });
+
+    test('rejects date before min', () {
+      final v = Rules.dateAfter(DateTime(2026, 1, 1));
+      expect(v.validate('2025-12-31'), isNotNull);
+    });
+
+    test('rejects invalid date', () {
+      final v = Rules.dateAfter(DateTime(2026, 1, 1));
+      expect(v.validate('not-a-date'), isNotNull);
+    });
+  });
+
+  group('dateBefore validator', () {
+    test('accepts date on or before max', () {
+      final v = Rules.dateBefore(DateTime(2026, 12, 31));
+      expect(v.validate('2026-06-15'), isNull);
+      expect(v.validate('2026-12-31'), isNull);
+    });
+
+    test('rejects date after max', () {
+      final v = Rules.dateBefore(DateTime(2026, 12, 31));
+      expect(v.validate('2027-01-01'), isNotNull);
+    });
+  });
+
+  group('minItems validator', () {
+    test('accepts list with enough items', () {
+      final v = Rules.minItems(2);
+      expect(v.validate([1, 2, 3]), isNull);
+      expect(v.validate([1, 2]), isNull);
+    });
+
+    test('rejects list with too few items', () {
+      final v = Rules.minItems(2);
+      expect(v.validate([1]), isNotNull);
+      expect(v.validate([]), isNotNull);
+    });
+
+    test('works with sets', () {
+      final v = Rules.minItems(2);
+      expect(v.validate({1, 2}), isNull);
+      expect(v.validate({1}), isNotNull);
+    });
+
+    test('works with maps', () {
+      final v = Rules.minItems(1);
+      expect(v.validate({'a': 1}), isNull);
+      expect(v.validate({}), isNotNull);
+    });
+
+    test('accepts null', () {
+      final v = Rules.minItems(1);
+      expect(v.validate(null), isNull);
+    });
+  });
+
+  group('maxItems validator', () {
+    test('accepts list within limit', () {
+      final v = Rules.maxItems(3);
+      expect(v.validate([1, 2]), isNull);
+      expect(v.validate([1, 2, 3]), isNull);
+    });
+
+    test('rejects list exceeding limit', () {
+      final v = Rules.maxItems(2);
+      expect(v.validate([1, 2, 3]), isNotNull);
+    });
+
+    test('works with sets', () {
+      final v = Rules.maxItems(2);
+      expect(v.validate({1, 2}), isNull);
+      expect(v.validate({1, 2, 3}), isNotNull);
+    });
+
+    test('accepts null', () {
+      final v = Rules.maxItems(1);
+      expect(v.validate(null), isNull);
+    });
+  });
+
+  group('date validators in fromJson', () {
+    test('parses date descriptor', () {
+      final schema = FormSchema.fromJson({
+        'birthday': ['date'],
+      });
+      final result = schema.validate({'birthday': 'not-a-date'});
+      expect(result.hasError('birthday'), isTrue);
+    });
+
+    test('parses dateAfter descriptor', () {
+      final schema = FormSchema.fromJson({
+        'start': ['dateAfter:2026-01-01'],
+      });
+      final result = schema.validate({'start': '2025-06-01'});
+      expect(result.hasError('start'), isTrue);
+    });
+
+    test('parses dateBefore descriptor', () {
+      final schema = FormSchema.fromJson({
+        'end': ['dateBefore:2026-12-31'],
+      });
+      final result = schema.validate({'end': '2027-06-01'});
+      expect(result.hasError('end'), isTrue);
+    });
+
+    test('parses minItems descriptor', () {
+      final schema = FormSchema.fromJson({
+        'tags': ['minItems:2'],
+      });
+      final result = schema.validate({'tags': [1]});
+      expect(result.hasError('tags'), isTrue);
+    });
+
+    test('parses maxItems descriptor', () {
+      final schema = FormSchema.fromJson({
+        'tags': ['maxItems:3'],
+      });
+      final result = schema.validate({'tags': [1, 2, 3, 4]});
+      expect(result.hasError('tags'), isTrue);
+    });
+  });
+}
+
 class _SpanishMessageProvider extends MessageProvider {
   @override
   String message(String ruleKey, Map<String, dynamic> params) {
