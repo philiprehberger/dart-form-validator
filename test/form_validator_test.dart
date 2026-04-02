@@ -437,6 +437,79 @@ void main() {
     });
   });
 
+  group('Rules.when (conditional)', () {
+    test('applies when condition is true', () {
+      final schema = FormSchema({
+        'country': [Rules.required()],
+        'state': [Rules.when((data) => data['country'] == 'US', Rules.required())],
+      });
+      final result = schema.validate({'country': 'US'});
+      expect(result.hasError('state'), isTrue);
+    });
+
+    test('skips when condition is false', () {
+      final schema = FormSchema({
+        'country': [Rules.required()],
+        'state': [Rules.when((data) => data['country'] == 'US', Rules.required())],
+      });
+      final result = schema.validate({'country': 'UK'});
+      expect(result.hasError('state'), isFalse);
+    });
+  });
+
+  group('Rules.all / Rules.any', () {
+    test('all passes when all validators pass', () {
+      final validator = Rules.all([Rules.required(), Rules.minLength(3)]);
+      expect(validator.validate('hello'), isNull);
+    });
+
+    test('all fails when any validator fails', () {
+      final validator = Rules.all([Rules.required(), Rules.minLength(10)]);
+      expect(validator.validate('hi'), isNotNull);
+    });
+
+    test('any passes when one validator passes', () {
+      final validator = Rules.any([Rules.email(), Rules.url()]);
+      expect(validator.validate('https://example.com'), isNull);
+    });
+
+    test('any fails when all validators fail', () {
+      final validator = Rules.any([Rules.email(), Rules.url()]);
+      expect(validator.validate('not-valid'), isNotNull);
+    });
+  });
+
+  group('Async validation', () {
+    test('validateAsync runs async validators', () async {
+      final schema = FormSchema({'name': [Rules.required()]});
+      final result = await schema.validateAsync(
+        {'name': 'taken'},
+        asyncValidators: [
+          MapEntry('name', AsyncFieldValidator(
+            'Name already taken',
+            (v) async => v != 'taken',
+          )),
+        ],
+      );
+      expect(result.hasError('name'), isTrue);
+      expect(result.errorsFor('name'), contains('Name already taken'));
+    });
+
+    test('validateAsync passes with valid async', () async {
+      final schema = FormSchema({'name': [Rules.required()]});
+      final result = await schema.validateAsync(
+        {'name': 'available'},
+        asyncValidators: [
+          MapEntry('name', AsyncFieldValidator(
+            'Name taken',
+            (v) async => v != 'taken',
+          )),
+        ],
+      );
+      expect(result.isValid, isTrue);
+    });
+  });
+
   group('Custom error messages', () {
     test('required accepts custom message', () {
       final rule = Rules.required(message: 'Name is required');

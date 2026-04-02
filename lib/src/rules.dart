@@ -145,6 +145,52 @@ class Rules {
   }) {
     return FieldValidator(message, test);
   }
+
+  /// Conditional validator — only applies when [condition] returns true.
+  ///
+  /// The condition receives the full form data map.
+  static FieldValidator when(
+    bool Function(Map<String, dynamic> data) condition,
+    FieldValidator validator,
+  ) {
+    return ConditionalValidator(condition, validator);
+  }
+
+  /// Passes only if ALL validators pass.
+  static FieldValidator all(List<FieldValidator> validators) {
+    return FieldValidator(
+      'Validation failed',
+      (value) => validators.every((v) => v.validate(value) == null),
+    );
+  }
+
+  /// Passes if ANY validator passes.
+  static FieldValidator any(List<FieldValidator> validators, {String? message}) {
+    return FieldValidator(
+      message ?? 'None of the validations passed',
+      (value) => validators.any((v) => v.validate(value) == null),
+    );
+  }
+}
+
+/// A conditional validator that only applies when a condition is met.
+///
+/// Used by [Rules.when] for conditional field validation based on form data.
+class ConditionalValidator extends FieldValidator {
+  final bool Function(Map<String, dynamic>) condition;
+  final FieldValidator _inner;
+
+  ConditionalValidator(this.condition, this._inner)
+      : super(_inner.message, (_) => true);
+
+  @override
+  String? validate(dynamic value) => _inner.validate(value);
+
+  /// Check condition against form data. Returns inner validate result if condition met, null otherwise.
+  String? validateWithCondition(dynamic value, Map<String, dynamic> data) {
+    if (!condition(data)) return null;
+    return _inner.validate(value);
+  }
 }
 
 /// A validator that compares a field's value against another field in the

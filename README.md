@@ -16,7 +16,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  philiprehberger_form_validator: ^0.1.0
+  philiprehberger_form_validator: ^0.2.0
 ```
 
 Then run:
@@ -84,6 +84,45 @@ final result = schema.validate({
 print(result.isValid); // true
 ```
 
+### Conditional Validation
+
+```dart
+final schema = FormSchema({
+  'country': [Rules.required()],
+  'state': [Rules.when((data) => data['country'] == 'US', Rules.required())],
+});
+
+final result = schema.validate({'country': 'US'});
+print(result.hasError('state')); // true — required only when country is US
+```
+
+### Combining Validators
+
+```dart
+// All must pass
+final strict = Rules.all([Rules.required(), Rules.minLength(8)]);
+
+// Any can pass
+final flexible = Rules.any([Rules.email(), Rules.url()]);
+```
+
+### Async Validation
+
+```dart
+final schema = FormSchema({'username': [Rules.required()]});
+
+final result = await schema.validateAsync(
+  {'username': 'taken'},
+  asyncValidators: [
+    MapEntry('username', AsyncFieldValidator(
+      'Username already taken',
+      (value) async => value != 'taken', // e.g. check server
+    )),
+  ],
+);
+print(result.isValid); // false
+```
+
 ### Inspecting Errors
 
 ```dart
@@ -106,6 +145,10 @@ result.errorCount;           // total error count
 | `FormSchema.fromJson()` | Create schema from JSON-like rule descriptor map |
 | `ValidationResult` | Result object with errors, field queries, and counts |
 | `CrossFieldValidator` | Validator that compares against another field's value |
+| `AsyncFieldValidator` | Async validation rule (e.g. server-side checks) |
+| `Rules.when()` | Conditional validator based on form data |
+| `Rules.all()` | Composite validator requiring all rules to pass |
+| `Rules.any()` | Composite validator requiring any rule to pass |
 
 ## Development
 

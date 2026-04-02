@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-01
+
+### Added
+- `AsyncFieldValidator` class for asynchronous validation (e.g. server-side checks)
+- `FormSchema.validateAsync` method supporting both sync and async validators
+- `Rules.when` for conditional validation based on form data
+- `Rules.all` composite validator requiring all rules to pass
+- `Rules.any` composite validator requiring any rule to pass
+
 ## [0.1.0] - 2026-04-01
 
 ### Added
