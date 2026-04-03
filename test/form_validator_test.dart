@@ -707,7 +707,6 @@ void main() {
       expect(sub.isValid, isTrue);
     });
   });
-}
 
   group('date validator', () {
     test('accepts valid date strings', () {
