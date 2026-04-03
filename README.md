@@ -16,7 +16,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  philiprehberger_form_validator: ^0.2.0
+  philiprehberger_form_validator: ^0.3.0
 ```
 
 Then run:
@@ -56,6 +56,7 @@ Rules.numeric()
 Rules.between(1, 100)
 Rules.equals('password')    // cross-field comparison
 Rules.oneOf(['a', 'b', 'c'])
+Rules.inRange(1, 100)
 Rules.custom((v) => v != null, message: 'Required')
 ```
 
@@ -123,6 +124,60 @@ final result = await schema.validateAsync(
 print(result.isValid); // false
 ```
 
+### Nested Object Validation
+
+```dart
+final schema = FormSchema.nested(
+  {
+    'name': [Rules.required()],
+  },
+  nestedSchemas: {
+    'address': FormSchema({
+      'city': [Rules.required()],
+      'zip': [Rules.required(), Rules.pattern(RegExp(r'^\d{5}$'))],
+    }),
+  },
+);
+
+final result = schema.validateNested({
+  'name': 'Alice',
+  'address': {'city': '', 'zip': 'bad'},
+});
+
+print(result.hasError('address.city')); // true
+print(result.hasError('address.zip'));  // true
+
+// Extract nested errors
+final addressErrors = result.nested('address');
+print(addressErrors.errorsFor('city')); // [This field is required]
+```
+
+### Localization
+
+```dart
+class SpanishMessages extends MessageProvider {
+  @override
+  String message(String ruleKey, Map<String, dynamic> params) {
+    switch (ruleKey) {
+      case 'required':
+        return 'Campo obligatorio';
+      case 'email':
+        return 'Correo electronico invalido';
+      default:
+        return 'Error de validacion';
+    }
+  }
+}
+
+// Set globally before creating rules
+MessageProvider.setProvider(SpanishMessages());
+final rule = Rules.required();
+print(rule.validate(null)); // Campo obligatorio
+
+// Reset to English defaults
+MessageProvider.resetProvider();
+```
+
 ### Inspecting Errors
 
 ```dart
@@ -147,8 +202,14 @@ result.errorCount;           // total error count
 | `CrossFieldValidator` | Validator that compares against another field's value |
 | `AsyncFieldValidator` | Async validation rule (e.g. server-side checks) |
 | `Rules.when()` | Conditional validator based on form data |
+| `Rules.inRange()` | Inclusive numeric range validation |
 | `Rules.all()` | Composite validator requiring all rules to pass |
 | `Rules.any()` | Composite validator requiring any rule to pass |
+| `MessageProvider` | Abstract class for localizable error messages |
+| `DefaultMessageProvider` | Built-in English message provider |
+| `FormSchema.nested()` | Schema with support for nested object validation |
+| `FormSchema.validateNested()` | Validates data including nested objects with dot-path keys |
+| `ValidationResult.nested()` | Extracts errors for a nested prefix |
 
 ## Development
 

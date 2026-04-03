@@ -26,6 +26,22 @@ class ValidationResult {
   /// Returns the total number of validation errors across all fields.
   int get errorCount => allErrors.length;
 
+  /// Returns a new [ValidationResult] containing only errors whose keys
+  /// start with [prefix] followed by a dot. The prefix and dot are stripped
+  /// from the returned keys.
+  ///
+  /// Useful for extracting errors for a nested object section.
+  ValidationResult nested(String prefix) {
+    final dot = '$prefix.';
+    final sub = <String, List<String>>{};
+    for (final entry in errors.entries) {
+      if (entry.key.startsWith(dot)) {
+        sub[entry.key.substring(dot.length)] = entry.value;
+      }
+    }
+    return ValidationResult(sub);
+  }
+
   @override
   String toString() {
     if (isValid) return 'ValidationResult(valid)';
