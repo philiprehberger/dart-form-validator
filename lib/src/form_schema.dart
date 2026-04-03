@@ -139,6 +139,11 @@ class FormSchema {
   /// - `'pattern:REGEX'` - must match regex pattern
   /// - `'oneOf:a,b,c'` - must be one of the listed values
   /// - `'equals:fieldName'` - must match another field's value
+  /// - `'date'` - must be a valid date
+  /// - `'dateAfter:YYYY-MM-DD'` - date must be on or after
+  /// - `'dateBefore:YYYY-MM-DD'` - date must be on or before
+  /// - `'minItems:N'` - collection must have at least N items
+  /// - `'maxItems:N'` - collection must have at most N items
   ///
   /// Example:
   /// ```dart
@@ -177,6 +182,8 @@ class FormSchema {
           return Rules.url();
         case 'numeric':
           return Rules.numeric();
+        case 'date':
+          return Rules.date();
         default:
           throw ArgumentError('Unknown rule descriptor: $descriptor');
       }
@@ -199,6 +206,14 @@ class FormSchema {
         return Rules.oneOf(param.split(','));
       case 'equals':
         return Rules.equals(param);
+      case 'dateAfter':
+        return Rules.dateAfter(DateTime.parse(param));
+      case 'dateBefore':
+        return Rules.dateBefore(DateTime.parse(param));
+      case 'minItems':
+        return Rules.minItems(int.parse(param));
+      case 'maxItems':
+        return Rules.maxItems(int.parse(param));
       default:
         throw ArgumentError('Unknown rule descriptor: $descriptor');
     }

@@ -28,7 +28,8 @@ abstract class MessageProvider {
 /// Default English message provider.
 ///
 /// Supports rule keys: `required`, `email`, `url`, `minLength`, `maxLength`,
-/// `pattern`, `numeric`, `between`, `equals`, `oneOf`, and `inRange`.
+/// `pattern`, `numeric`, `between`, `equals`, `oneOf`, `inRange`, `date`,
+/// `dateAfter`, `dateBefore`, `minItems`, and `maxItems`.
 class DefaultMessageProvider extends MessageProvider {
   @override
   String message(String ruleKey, Map<String, dynamic> params) {
@@ -55,6 +56,16 @@ class DefaultMessageProvider extends MessageProvider {
         return 'Must be one of: ${(params['allowed'] as List).join(', ')}';
       case 'inRange':
         return 'Must be between ${params['min']} and ${params['max']}';
+      case 'date':
+        return 'Must be a valid date';
+      case 'dateAfter':
+        return 'Must be on or after ${params['min']}';
+      case 'dateBefore':
+        return 'Must be on or before ${params['max']}';
+      case 'minItems':
+        return 'Must have at least ${params['min']} items';
+      case 'maxItems':
+        return 'Must have at most ${params['max']} items';
       default:
         return 'Validation failed';
     }

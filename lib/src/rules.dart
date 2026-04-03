@@ -167,6 +167,76 @@ class Rules {
     );
   }
 
+  /// Validates that the value is a valid date string (parseable by [DateTime.tryParse]).
+  static FieldValidator date({String? message}) {
+    return FieldValidator(
+      message ??
+          MessageProvider.current.message('date', {}),
+      (value) {
+        if (value == null || (value is String && value.isEmpty)) return true;
+        return DateTime.tryParse(value.toString()) != null;
+      },
+    );
+  }
+
+  /// Validates that a parsed date falls on or after [min].
+  static FieldValidator dateAfter(DateTime min, {String? message}) {
+    return FieldValidator(
+      message ??
+          MessageProvider.current.message('dateAfter', {'min': min.toIso8601String()}),
+      (value) {
+        if (value == null || (value is String && value.isEmpty)) return true;
+        final parsed = DateTime.tryParse(value.toString());
+        if (parsed == null) return false;
+        return !parsed.isBefore(min);
+      },
+    );
+  }
+
+  /// Validates that a parsed date falls on or before [max].
+  static FieldValidator dateBefore(DateTime max, {String? message}) {
+    return FieldValidator(
+      message ??
+          MessageProvider.current.message('dateBefore', {'max': max.toIso8601String()}),
+      (value) {
+        if (value == null || (value is String && value.isEmpty)) return true;
+        final parsed = DateTime.tryParse(value.toString());
+        if (parsed == null) return false;
+        return !parsed.isAfter(max);
+      },
+    );
+  }
+
+  /// Validates that a collection (List, Set, or Map) has at least [min] items.
+  static FieldValidator minItems(int min, {String? message}) {
+    return FieldValidator(
+      message ??
+          MessageProvider.current.message('minItems', {'min': min}),
+      (value) {
+        if (value == null) return true;
+        if (value is List) return value.length >= min;
+        if (value is Set) return value.length >= min;
+        if (value is Map) return value.length >= min;
+        return false;
+      },
+    );
+  }
+
+  /// Validates that a collection (List, Set, or Map) has at most [max] items.
+  static FieldValidator maxItems(int max, {String? message}) {
+    return FieldValidator(
+      message ??
+          MessageProvider.current.message('maxItems', {'max': max}),
+      (value) {
+        if (value == null) return true;
+        if (value is List) return value.length <= max;
+        if (value is Set) return value.length <= max;
+        if (value is Map) return value.length <= max;
+        return false;
+      },
+    );
+  }
+
   /// Creates a validator with a custom validation function.
   static FieldValidator custom(
     bool Function(dynamic) test, {
