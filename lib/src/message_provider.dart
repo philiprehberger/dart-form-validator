@@ -29,7 +29,8 @@ abstract class MessageProvider {
 ///
 /// Supports rule keys: `required`, `email`, `url`, `minLength`, `maxLength`,
 /// `pattern`, `numeric`, `between`, `equals`, `oneOf`, `inRange`, `date`,
-/// `dateAfter`, `dateBefore`, `minItems`, and `maxItems`.
+/// `dateAfter`, `dateBefore`, `minItems`, `maxItems`, `uuid`,
+/// `alphanumeric`, `notIn`, `minWords`, and `maxWords`.
 class DefaultMessageProvider extends MessageProvider {
   @override
   String message(String ruleKey, Map<String, dynamic> params) {
@@ -66,6 +67,16 @@ class DefaultMessageProvider extends MessageProvider {
         return 'Must have at least ${params['min']} items';
       case 'maxItems':
         return 'Must have at most ${params['max']} items';
+      case 'uuid':
+        return 'Must be a valid UUID';
+      case 'alphanumeric':
+        return 'Must contain only letters and numbers';
+      case 'notIn':
+        return 'Must not be one of: ${(params['disallowed'] as List).join(', ')}';
+      case 'minWords':
+        return 'Must contain at least ${params['min']} words';
+      case 'maxWords':
+        return 'Must contain at most ${params['max']} words';
       default:
         return 'Validation failed';
     }

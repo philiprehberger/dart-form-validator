@@ -855,6 +855,120 @@ void main() {
       expect(result.hasError('tags'), isTrue);
     });
   });
+
+  group('Rules.uuid', () {
+    test('accepts valid UUID v4', () {
+      final v = Rules.uuid();
+      expect(v.validate('550e8400-e29b-41d4-a716-446655440000'), isNull);
+    });
+
+    test('accepts uppercase UUID', () {
+      final v = Rules.uuid();
+      expect(v.validate('550E8400-E29B-41D4-A716-446655440000'), isNull);
+    });
+
+    test('rejects malformed UUID', () {
+      final v = Rules.uuid();
+      expect(v.validate('not-a-uuid'), isNotNull);
+      expect(v.validate('550e8400-e29b-41d4-a716'), isNotNull);
+    });
+
+    test('passes through null and empty', () {
+      final v = Rules.uuid();
+      expect(v.validate(null), isNull);
+      expect(v.validate(''), isNull);
+    });
+
+    test('supports custom message', () {
+      final v = Rules.uuid(message: 'Bad UUID');
+      expect(v.validate('nope'), equals('Bad UUID'));
+    });
+  });
+
+  group('Rules.alphanumeric', () {
+    test('accepts letters and digits', () {
+      final v = Rules.alphanumeric();
+      expect(v.validate('abc123'), isNull);
+      expect(v.validate('ABC'), isNull);
+    });
+
+    test('rejects spaces and symbols', () {
+      final v = Rules.alphanumeric();
+      expect(v.validate('hello world'), isNotNull);
+      expect(v.validate('abc!'), isNotNull);
+    });
+
+    test('passes through null and empty', () {
+      final v = Rules.alphanumeric();
+      expect(v.validate(null), isNull);
+      expect(v.validate(''), isNull);
+    });
+  });
+
+  group('Rules.notIn', () {
+    test('rejects disallowed values', () {
+      final v = Rules.notIn(['admin', 'root']);
+      expect(v.validate('admin'), isNotNull);
+      expect(v.validate('root'), isNotNull);
+    });
+
+    test('accepts other values', () {
+      final v = Rules.notIn(['admin', 'root']);
+      expect(v.validate('alice'), isNull);
+    });
+
+    test('passes through null', () {
+      final v = Rules.notIn(['admin']);
+      expect(v.validate(null), isNull);
+    });
+
+    test('default message lists disallowed values', () {
+      final v = Rules.notIn(['admin', 'root']);
+      expect(v.validate('admin'), contains('admin'));
+    });
+  });
+
+  group('Rules.minWords', () {
+    test('accepts enough words', () {
+      final v = Rules.minWords(3);
+      expect(v.validate('one two three'), isNull);
+      expect(v.validate('one two three four'), isNull);
+    });
+
+    test('rejects too few words', () {
+      final v = Rules.minWords(3);
+      expect(v.validate('one two'), isNotNull);
+    });
+
+    test('collapses extra whitespace', () {
+      final v = Rules.minWords(2);
+      expect(v.validate('  hi   there  '), isNull);
+    });
+
+    test('passes through null and empty', () {
+      final v = Rules.minWords(3);
+      expect(v.validate(null), isNull);
+      expect(v.validate(''), isNull);
+    });
+  });
+
+  group('Rules.maxWords', () {
+    test('accepts up to max', () {
+      final v = Rules.maxWords(3);
+      expect(v.validate('one two three'), isNull);
+      expect(v.validate('one'), isNull);
+    });
+
+    test('rejects too many words', () {
+      final v = Rules.maxWords(3);
+      expect(v.validate('one two three four'), isNotNull);
+    });
+
+    test('passes through null', () {
+      final v = Rules.maxWords(3);
+      expect(v.validate(null), isNull);
+    });
+  });
 }
 
 class _SpanishMessageProvider extends MessageProvider {

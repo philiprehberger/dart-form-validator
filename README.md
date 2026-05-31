@@ -4,11 +4,13 @@
 [![pub package](https://img.shields.io/pub/v/philiprehberger_form_validator.svg)](https://pub.dev/packages/philiprehberger_form_validator)
 [![Last updated](https://img.shields.io/github/last-commit/philiprehberger/dart-form-validator)](https://github.com/philiprehberger/dart-form-validator/commits/main)
 
+![philiprehberger_form_validator](https://raw.githubusercontent.com/philiprehberger/dart-form-validator/main/package-card.webp)
+
 Declarative form validation with composable rules and JSON schemas
 
 ## Requirements
 
-- Dart >= 3.5
+- Dart >= 3.6
 
 ## Installation
 
@@ -16,7 +18,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  philiprehberger_form_validator: ^0.4.0
+  philiprehberger_form_validator: ^0.5.0
 ```
 
 Then run:
@@ -62,6 +64,11 @@ Rules.dateAfter(DateTime(2026, 1, 1))
 Rules.dateBefore(DateTime(2026, 12, 31))
 Rules.minItems(1)
 Rules.maxItems(10)
+Rules.uuid()
+Rules.alphanumeric()
+Rules.notIn(['admin', 'root'])
+Rules.minWords(2)
+Rules.maxWords(50)
 Rules.custom((v) => v != null, message: 'Required')
 ```
 
@@ -237,6 +244,11 @@ result.errorCount;           // total error count
 | `Rules.dateBefore(max)` | Date must be on or before max |
 | `Rules.minItems(min)` | Collection must have at least min items |
 | `Rules.maxItems(max)` | Collection must have at most max items |
+| `Rules.uuid()` | Validates RFC 4122 UUID (v1–v5) |
+| `Rules.alphanumeric()` | Letters and digits only |
+| `Rules.notIn(list)` | Value must NOT be in the disallowed list |
+| `Rules.minWords(min)` | String must have at least min whitespace-separated words |
+| `Rules.maxWords(max)` | String must have at most max whitespace-separated words |
 | `ValidationResult.nested()` | Extracts errors for a nested prefix |
 
 ## Development

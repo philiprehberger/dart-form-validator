@@ -1,1 +1,9 @@
-export 'form_validator.dart';
+/// Declarative form validation with composable rules and JSON schemas
+library;
+
+export 'src/async_field_validator.dart';
+export 'src/field_validator.dart';
+export 'src/form_schema.dart';
+export 'src/message_provider.dart';
+export 'src/rules.dart';
+export 'src/validation_result.dart';

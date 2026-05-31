@@ -19,6 +19,13 @@ class Rules {
 
   static final _numericRegex = RegExp(r'^-?\d+(\.\d+)?$');
 
+  static final _uuidRegex = RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+    caseSensitive: false,
+  );
+
+  static final _alphanumericRegex = RegExp(r'^[a-zA-Z0-9]+$');
+
   /// Requires the value to be non-null and non-empty (for strings).
   static FieldValidator required({String? message}) {
     return FieldValidator(
@@ -268,6 +275,73 @@ class Rules {
     return FieldValidator(
       message ?? 'None of the validations passed',
       (value) => validators.any((v) => v.validate(value) == null),
+    );
+  }
+
+  /// Validates that the value is a valid RFC 4122 UUID (versions 1–5).
+  static FieldValidator uuid({String? message}) {
+    return FieldValidator(
+      message ?? MessageProvider.current.message('uuid', {}),
+      (value) {
+        if (value == null || value is! String || value.isEmpty) return true;
+        return _uuidRegex.hasMatch(value);
+      },
+    );
+  }
+
+  /// Validates that the value contains only ASCII letters and digits.
+  static FieldValidator alphanumeric({String? message}) {
+    return FieldValidator(
+      message ?? MessageProvider.current.message('alphanumeric', {}),
+      (value) {
+        if (value == null || value is! String || value.isEmpty) return true;
+        return _alphanumericRegex.hasMatch(value);
+      },
+    );
+  }
+
+  /// Validates that the value is NOT one of the [disallowed] values.
+  ///
+  /// Useful for reserved usernames, forbidden keywords, or denylists.
+  static FieldValidator notIn(List<dynamic> disallowed, {String? message}) {
+    return FieldValidator(
+      message ??
+          MessageProvider.current
+              .message('notIn', {'disallowed': disallowed}),
+      (value) {
+        if (value == null) return true;
+        return !disallowed.contains(value);
+      },
+    );
+  }
+
+  /// Validates that a string contains at least [min] whitespace-separated
+  /// words.
+  static FieldValidator minWords(int min, {String? message}) {
+    return FieldValidator(
+      message ??
+          MessageProvider.current.message('minWords', {'min': min}),
+      (value) {
+        if (value == null || value is! String || value.isEmpty) return true;
+        final count =
+            value.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
+        return count >= min;
+      },
+    );
+  }
+
+  /// Validates that a string contains at most [max] whitespace-separated
+  /// words.
+  static FieldValidator maxWords(int max, {String? message}) {
+    return FieldValidator(
+      message ??
+          MessageProvider.current.message('maxWords', {'max': max}),
+      (value) {
+        if (value == null || value is! String || value.isEmpty) return true;
+        final count =
+            value.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
+        return count <= max;
+      },
     );
   }
 }

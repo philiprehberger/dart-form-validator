@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-30
+
+### Added
+- `Rules.uuid()` validator for RFC 4122 UUIDs (v1–v5)
+- `Rules.alphanumeric()` validator for letter+digit-only fields
+- `Rules.notIn()` validator (inverse of `oneOf`) for denylists and reserved values
+- `Rules.minWords()` and `Rules.maxWords()` for word-count bounds on free-text fields
+- Matching default messages in `DefaultMessageProvider` for all new rules
+
+### Changed
+- Reversed barrel files so `lib/philiprehberger_form_validator.dart` is the primary (per pub.dev validation requirement); `lib/form_validator.dart` now re-exports it
+
 ## [0.4.0] - 2026-04-02
 
 ### Added
